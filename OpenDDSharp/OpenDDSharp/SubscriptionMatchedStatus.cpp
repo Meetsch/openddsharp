@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "SubscriptionMatchedStatus.h"
@@ -46,19 +46,6 @@ System::Int32 OpenDDSharp::DDS::SubscriptionMatchedStatus::CurrentCountChange::g
 OpenDDSharp::DDS::InstanceHandle OpenDDSharp::DDS::SubscriptionMatchedStatus::LastPublicationHandle::get() {
 	return last_publication_handle;
 };
-
-
-::DDS::SubscriptionMatchedStatus OpenDDSharp::DDS::SubscriptionMatchedStatus::ToNative() {
-	::DDS::SubscriptionMatchedStatus ret;
-
-	ret.current_count = current_count;
-	ret.current_count_change = current_count_change;
-	ret.last_publication_handle = last_publication_handle;
-	ret.total_count = total_count;
-	ret.total_count_change = total_count_change;
-
-	return ret;
-}
 
 void OpenDDSharp::DDS::SubscriptionMatchedStatus::FromNative(::DDS::SubscriptionMatchedStatus native) {
 	current_count = native.current_count;

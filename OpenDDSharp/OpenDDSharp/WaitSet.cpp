@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "WaitSet.h"
@@ -22,9 +22,15 @@ along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 OpenDDSharp::DDS::WaitSet::WaitSet() : WaitSet(new ::DDS::WaitSet()) { };
 
 OpenDDSharp::DDS::WaitSet::WaitSet(::DDS::WaitSet_ptr waitSet) {
-	impl_entity = waitSet;
+	impl_entity = ::DDS::WaitSet::_duplicate(waitSet);
 	conditions = gcnew List<Condition^>();
 };
+
+OpenDDSharp::DDS::WaitSet::!WaitSet() {
+    impl_entity = NULL;
+    conditions->Clear();
+    conditions = nullptr;
+}
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::WaitSet::Wait(ICollection<Condition^>^ activeConditions) {
 	Duration duration;
@@ -69,8 +75,12 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::WaitSet::AttachCondition(Conditio
 		return OpenDDSharp::DDS::ReturnCode::BadParameter;
 	}
 
-	conditions->Add(cond);
-	return (OpenDDSharp::DDS::ReturnCode)impl_entity->attach_condition(cond->impl_entity);
+    ::DDS::ReturnCode_t ret = impl_entity->attach_condition(cond->impl_entity);
+    if (ret == ::DDS::RETCODE_OK && !conditions->Contains(cond)) {
+        conditions->Add(cond);
+    }
+	
+	return (OpenDDSharp::DDS::ReturnCode)ret;
 };
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::WaitSet::DetachCondition(Condition^ cond) {
@@ -78,8 +88,11 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::WaitSet::DetachCondition(Conditio
 		return OpenDDSharp::DDS::ReturnCode::BadParameter;
 	}
 
-	conditions->Remove(cond);
-	return (OpenDDSharp::DDS::ReturnCode)impl_entity->detach_condition(cond->impl_entity);
+    ::DDS::ReturnCode_t ret = impl_entity->detach_condition(cond->impl_entity);
+    if (ret == ::DDS::RETCODE_OK) {
+        conditions->Remove(cond);
+    }
+	return (OpenDDSharp::DDS::ReturnCode)ret;
 };
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::WaitSet::GetConditions(ICollection<Condition^>^ attachedConditions) {
@@ -91,24 +104,22 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::WaitSet::GetConditions(ICollectio
 	::DDS::ConditionSeq seq;
 	::DDS::ReturnCode_t ret = impl_entity->get_conditions(seq);
 
-	if (ret == ::DDS::RETCODE_OK) {
-		System::UInt32 i = 0;
-		while (i < seq.length()) {			
-			Condition^ cond = nullptr;
-			for each (Condition^ c in conditions) {
-				if (c->impl_entity == seq[i]) {
-					cond = c;
-					break;
-				}
+	System::UInt32 i = 0;
+	while (i < seq.length()) {			
+		Condition^ cond = nullptr;
+		for each (Condition^ c in conditions) {
+			if (c->impl_entity == seq[i]) {
+				cond = c;
+				break;
 			}
-
-			if (cond != nullptr) {
-				attachedConditions->Add(cond);
-			}
-			i++;
 		}
-	}
 
+		if (cond != nullptr) {
+			attachedConditions->Add(cond);
+		}
+		i++;
+	}
+	
 	return (OpenDDSharp::DDS::ReturnCode)ret;
 	
 };
@@ -129,7 +140,7 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::WaitSet::DetachConditions(ICollec
 
 	::DDS::ReturnCode_t ret = impl_entity->detach_conditions(seq);
 	if (ret == ::DDS::RETCODE_OK) {
-		for each (Condition^ cond in conditions) {
+		for each (Condition^ cond in System::Linq::Enumerable::ToList(conditions)) {
 			conditions->Remove(cond);
 		}
 	}

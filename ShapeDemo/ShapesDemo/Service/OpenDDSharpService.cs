@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Collections.Generic;
 using OpenDDSharp.DDS;
+using OpenDDSharp.OpenDDS.RTPS;
 using OpenDDSharp.OpenDDS.DCPS;
 using OpenDDSharp.ShapesDemo.Model;
 using OpenDDSharp.org.omg.dds.demo;
@@ -9,13 +10,18 @@ using CommonServiceLocator;
 
 namespace OpenDDSharp.ShapesDemo.Service
 {
-    public class OpenDDSharpService : IOpenDDSharpService
+    public sealed class OpenDDSharpService : IOpenDDSharpService
     {
         #region Constants
+        private const string RTPS_DISCOVERY = "RtpsDiscovery";
         private const string TYPE_NAME = "ShapeType";
         private const string SQUARE_TOPIC_NAME = "Square";
         private const string CIRCLE_TOPIC_NAME = "Circle";
         private const string TRIANGLE_TOPIC_NAME = "Triangle";
+        private const double OPENDDS_FACTOR_X = 1d;
+        private const double OPENDDS_FACTOR_Y = 1d;
+        private const double RTI_FACTOR_X = 291d / 205d;
+        private const double RTI_FACTOR_Y = 331d / 235d;
         private string FILTER_OUTSIDE = "(x BETWEEN %0 AND %1) AND (y BETWEEN %2 AND %3)";
         private string FILTER_INSIDE = "(x < %0) OR(x > %1) OR(y< %2) OR(y > %3)";
         #endregion
@@ -29,7 +35,6 @@ namespace OpenDDSharp.ShapesDemo.Service
         #region Fields
         private bool _disposed;
         private IConfigurationService _config;
-        private ParticipantService _participantService;
         private DomainParticipantFactory _domainFactory;
         private DomainParticipant _participant;
         private Publisher _publisher;
@@ -42,6 +47,36 @@ namespace OpenDDSharp.ShapesDemo.Service
         private int _cfCircleCount;
         private int _cfSquareCount;
         private int _cfTriangleCount;
+        private RtpsDiscovery _disc;
+        private TransportConfig _tConfig;
+        private TransportInst _inst;
+        private RtpsUdpInst _rui;
+        private InteroperatibilityProvider _provider;
+        private double _factorX = 1d;
+        private double _factorY = 1d;
+        #endregion
+
+        #region Properties
+        public InteroperatibilityProvider Provider
+        {
+            get { return _provider; }
+            set
+            {
+                _provider = value;
+
+                switch(_provider)
+                {
+                    case InteroperatibilityProvider.Rti:
+                        _factorX = RTI_FACTOR_X;
+                        _factorY = RTI_FACTOR_Y;
+                        break;
+                    default:
+                        _factorX = OPENDDS_FACTOR_X;
+                        _factorY = OPENDDS_FACTOR_Y;
+                        break;
+                }
+            }
+        }
         #endregion
 
         #region Constructors
@@ -49,10 +84,28 @@ namespace OpenDDSharp.ShapesDemo.Service
         {
             _config = ServiceLocator.Current.GetInstance<IConfigurationService>();
 
-            _participantService = ParticipantService.Instance;
-            string[] args = { "-DCPSDebugLevel", "10", "-ORBLogFile", "LogFile.log", "-ORBDebugLevel", "10" };
-            _domainFactory = _participantService.GetDomainParticipantFactory(args);
+            _disc = new RtpsDiscovery(RTPS_DISCOVERY)
+            {
+                ResendPeriod = new TimeValue { Seconds = 1 },
+                SedpMulticast = true
+            };
+        
+            ParticipantService.Instance.AddDiscovery(_disc);
+            ParticipantService.Instance.DefaultDiscovery = RTPS_DISCOVERY;
 
+            long ticks = DateTime.Now.Ticks;
+            string configName = "openddsharp_rtps_interop_" + ticks.ToString(); ;
+            string instName = "internal_openddsharp_rtps_transport_" + ticks.ToString(); ;
+
+            _tConfig = TransportRegistry.Instance.CreateConfig(configName);
+            _inst = TransportRegistry.Instance.CreateInst(instName, "rtps_udp");
+            _rui = new RtpsUdpInst(_inst);
+            _tConfig.Insert(_inst);
+            TransportRegistry.Instance.GlobalConfig = _tConfig;
+            ParticipantService.Instance.SetRepoDomain(0, RTPS_DISCOVERY);
+
+            _domainFactory = ParticipantService.Instance.GetDomainParticipantFactory("-DCPSDebugLevel", "10", "-ORBLogFile", "LogFile.log", "-ORBDebugLevel", "10");
+            
             _participant = _domainFactory.CreateParticipant(0);
             if (_participant == null)
             {
@@ -112,15 +165,15 @@ namespace OpenDDSharp.ShapesDemo.Service
         {
             if (shape is CircleType)
             {
-                _shapeDynamics.Add(new ShapeDynamic(CreateCircleWriter(), shape, constraint, speed));
+                _shapeDynamics.Add(new ShapeDynamic(CreateCircleWriter(), shape, constraint, speed, _provider));
             }
             else if (shape is SquareType)
             {
-                _shapeDynamics.Add(new ShapeDynamic(CreateSquareWriter(), shape, constraint, speed));
+                _shapeDynamics.Add(new ShapeDynamic(CreateSquareWriter(), shape, constraint, speed, _provider));
             }
             else if (shape is TriangleType)
             {
-                _shapeDynamics.Add(new ShapeDynamic(CreateTriangleWriter(), shape, constraint, speed));
+                _shapeDynamics.Add(new ShapeDynamic(CreateTriangleWriter(), shape, constraint, speed, _provider));
             }                           
         }
 
@@ -192,13 +245,12 @@ namespace OpenDDSharp.ShapesDemo.Service
             if (_config.ReaderFilterConfig.Enabled)
             {
                 string filter = _config.ReaderFilterConfig.FilterKind == FilterKind.Inside ? FILTER_INSIDE : FILTER_OUTSIDE;
-                topic = _participant.CreateContentFilteredTopic("CFSquare" + (++_cfSquareCount), _squareTopic, filter, new List<string>
-                {
-                    _config.ReaderFilterConfig.X0.ToString(),
-                    _config.ReaderFilterConfig.X1.ToString(),
-                    _config.ReaderFilterConfig.Y0.ToString(),
-                    _config.ReaderFilterConfig.Y1.ToString()
-                });
+                topic = _participant.CreateContentFilteredTopic("CFSquare" + (++_cfSquareCount), 
+                                                                _squareTopic, filter,
+                                                                _config.ReaderFilterConfig.X0.ToString(),
+                                                                _config.ReaderFilterConfig.X1.ToString(),
+                                                                _config.ReaderFilterConfig.Y0.ToString(),
+                                                                _config.ReaderFilterConfig.Y1.ToString());
             }
             else
             {
@@ -223,13 +275,12 @@ namespace OpenDDSharp.ShapesDemo.Service
             if (_config.ReaderFilterConfig.Enabled)
             {
                 string filter = _config.ReaderFilterConfig.FilterKind == FilterKind.Inside ? FILTER_INSIDE : FILTER_OUTSIDE;
-                topic = _participant.CreateContentFilteredTopic("CFCircle" + (++_cfCircleCount), _circleTopic, filter, new List<string>
-                {
-                    _config.ReaderFilterConfig.X0.ToString(),
-                    _config.ReaderFilterConfig.X1.ToString(),
-                    _config.ReaderFilterConfig.Y0.ToString(),
-                    _config.ReaderFilterConfig.Y1.ToString()
-                });
+                topic = _participant.CreateContentFilteredTopic("CFCircle" + (++_cfCircleCount), 
+                                                                _circleTopic, filter,  
+                                                                _config.ReaderFilterConfig.X0.ToString(),
+                                                                _config.ReaderFilterConfig.X1.ToString(),
+                                                                _config.ReaderFilterConfig.Y0.ToString(),
+                                                                _config.ReaderFilterConfig.Y1.ToString());
             }
             else
             {
@@ -254,13 +305,12 @@ namespace OpenDDSharp.ShapesDemo.Service
             if (_config.ReaderFilterConfig.Enabled)
             {
                 string filter = _config.ReaderFilterConfig.FilterKind == FilterKind.Inside ? FILTER_INSIDE : FILTER_OUTSIDE;
-                topic = _participant.CreateContentFilteredTopic("CFTriangle" + (++_cfTriangleCount), _triangleTopic, filter, new List<string>
-                {
-                    _config.ReaderFilterConfig.X0.ToString(),
-                    _config.ReaderFilterConfig.X1.ToString(),
-                    _config.ReaderFilterConfig.Y0.ToString(),
-                    _config.ReaderFilterConfig.Y1.ToString()
-                });
+                topic = _participant.CreateContentFilteredTopic("CFTriangle" + (++_cfTriangleCount), 
+                                                                _triangleTopic, filter, 
+                                                                _config.ReaderFilterConfig.X0.ToString(),
+                                                                _config.ReaderFilterConfig.X1.ToString(),
+                                                                _config.ReaderFilterConfig.Y0.ToString(),
+                                                                _config.ReaderFilterConfig.Y1.ToString());
             }
             else
             {
@@ -322,9 +372,9 @@ namespace OpenDDSharp.ShapesDemo.Service
                     SampleInfo info = infos[i];
                     ShapeType sample = samples[i];
                     if (info.ValidData)
-                    {                        
-                        int x = sample.x - (sample.shapesize / 2);
-                        int y = sample.y - (sample.shapesize / 2);
+                    {
+                        int x = Convert.ToInt32((sample.x - (sample.shapesize / 2)) * _factorX);
+                        int y = Convert.ToInt32((sample.y - (sample.shapesize / 2)) * _factorY);                        
                         SquareType square = new SquareType
                         {
                             Color = sample.color,                            
@@ -334,11 +384,10 @@ namespace OpenDDSharp.ShapesDemo.Service
                             PublicationHandle = info.PublicationHandle
                         };
                         
-                        SquareUpdated?.Invoke(this, square);
-                        
+                        SquareUpdated?.Invoke(this, square);                        
                     }
                 }
-            }
+            }            
         }
 
         private void CircleTopicDataAvailable(ShapeTypeDataReader dr)
@@ -353,9 +402,9 @@ namespace OpenDDSharp.ShapesDemo.Service
                     SampleInfo info = infos[i];                    
                     ShapeType sample = samples[i];
                     if (info.ValidData)
-                    {
-                        int x = sample.x - (sample.shapesize / 2);
-                        int y = sample.y - (sample.shapesize / 2);                        
+                    {                        
+                        int x = Convert.ToInt32((sample.x - (sample.shapesize / 2)) * _factorX);
+                        int y = Convert.ToInt32((sample.y - (sample.shapesize / 2)) * _factorY);
                         CircleType square = new CircleType
                         {
                             Color = sample.color,
@@ -384,9 +433,9 @@ namespace OpenDDSharp.ShapesDemo.Service
                     SampleInfo info = infos[i];
                     ShapeType sample = samples[i];
                     if (info.ValidData)
-                    {
-                        int x = sample.x - (sample.shapesize / 2);
-                        int y = sample.y - (sample.shapesize / 2);
+                    {                        
+                        int x = Convert.ToInt32((sample.x - (sample.shapesize / 2)) * _factorX);
+                        int y = Convert.ToInt32((sample.y - (sample.shapesize / 2)) * _factorY);
                         TriangleType square = new TriangleType
                         {
                             Color = sample.color,
@@ -423,13 +472,12 @@ namespace OpenDDSharp.ShapesDemo.Service
                 if (_participant != null)
                 {
                     _participant.DeleteContainedEntities();
-                    _domainFactory.DeleteParticipant(_participant);
+                    _domainFactory.DeleteParticipant(_participant);                    
                 }
 
-                if (_participantService != null)
-                {
-                    _participantService.Shutdown();
-                }
+                TransportRegistry.Instance.Release();
+                TransportRegistry.Close();
+                ParticipantService.Instance.Shutdown();
 
                 _disposed = true;
             }

@@ -5,24 +5,28 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "Topic.h"
 #include "TopicListener.h"
 #include "DomainParticipant.h"
 
-OpenDDSharp::DDS::Topic::Topic(::DDS::Topic_ptr topic) : OpenDDSharp::DDS::Entity(topic) {
-	impl_entity = topic;	
+OpenDDSharp::DDS::Topic::Topic(::DDS::Topic_ptr topic) : OpenDDSharp::DDS::Entity(static_cast<::DDS::Entity_ptr>(topic)) {
+	impl_entity = ::DDS::Topic::_duplicate(topic);
+}
+
+OpenDDSharp::DDS::Topic::!Topic() {
+    impl_entity = NULL;
 }
 
 System::String^ OpenDDSharp::DDS::Topic::TypeName::get() {
@@ -41,36 +45,21 @@ System::String^ OpenDDSharp::DDS::Topic::GetTypeName() {
 	msclr::interop::marshal_context context;
 
 	const char * typeName = impl_entity->get_type_name();
-	if (typeName != NULL) {
-		return context.marshal_as<System::String^>(typeName);
-	}
-	else {
-		return nullptr;
-	}
+	return context.marshal_as<System::String^>(typeName);	
 }
 
 System::String^ OpenDDSharp::DDS::Topic::GetName() {
 	msclr::interop::marshal_context context;
 
 	const char * name = impl_entity->get_name();
-	if (name != NULL) {
-		return context.marshal_as<System::String^>(name);
-	}
-	else {
-		return nullptr;
-	}
+	return context.marshal_as<System::String^>(name);	
 }
 
 OpenDDSharp::DDS::DomainParticipant^ OpenDDSharp::DDS::Topic::GetParticipant() {
 	::DDS::DomainParticipant_ptr participant = impl_entity->get_participant();
 
 	OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(participant);
-	if (entity != nullptr) {
-		return static_cast<OpenDDSharp::DDS::DomainParticipant^>(entity);
-	}
-	else {
-		return nullptr;
-	}
+	return static_cast<OpenDDSharp::DDS::DomainParticipant^>(entity);	
 }
 
 ::DDS::TopicDescription_ptr OpenDDSharp::DDS::Topic::ToNative() {

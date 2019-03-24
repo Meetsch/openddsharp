@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "LivelinessQosPolicy.h"
@@ -42,12 +42,12 @@ void OpenDDSharp::DDS::LivelinessQosPolicy::LeaseDuration::set(::OpenDDSharp::DD
 };
 
 ::DDS::LivelinessQosPolicy OpenDDSharp::DDS::LivelinessQosPolicy::ToNative() {
-	::DDS::LivelinessQosPolicy* qos = new ::DDS::LivelinessQosPolicy();
+	::DDS::LivelinessQosPolicy qos;
 
-	qos->kind = (::DDS::LivelinessQosPolicyKind)kind;
-	qos->lease_duration = lease_duration.ToNative();
+	qos.kind = (::DDS::LivelinessQosPolicyKind)kind;
+	qos.lease_duration = lease_duration.ToNative();
 
-	return *qos;
+	return qos;
 };
 
 void OpenDDSharp::DDS::LivelinessQosPolicy::FromNative(::DDS::LivelinessQosPolicy qos) {

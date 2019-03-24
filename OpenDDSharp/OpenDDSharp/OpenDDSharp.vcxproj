@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Condition="'$(DDS_ROOT)'==''" Label="OpenDDS Home">
-    <DDS_ROOT>E:\OpenDDS</DDS_ROOT>
+    <DDS_ROOT>..\..\ext\OpenDDS</DDS_ROOT>
   </PropertyGroup>
   <PropertyGroup Condition="'$(ACE_ROOT)'==''" Label="ACE Home">
-    <ACE_ROOT>E:\OpenDDS\ACE_wrappers</ACE_ROOT>
+    <ACE_ROOT>..\..\ext\OpenDDS\ACE_wrappers</ACE_ROOT>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TAO_ROOT)'==''" Label="TAO Home">
-    <TAO_ROOT>E:\OpenDDS\ACE_wrappers\TAO</TAO_ROOT>
+    <TAO_ROOT>..\..\ext\OpenDDS\ACE_wrappers\TAO</TAO_ROOT>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -87,13 +87,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IgnoreImportLibrary>false</IgnoreImportLibrary>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>obj\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IgnoreImportLibrary>false</IgnoreImportLibrary>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>obj\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -102,12 +102,13 @@
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>obj\$(Platform)\$(Configuration)\</IntDir>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetExt>.dll</TargetExt>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>obj\$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,15 +117,21 @@
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>.;$(ACE_ROOT);$(TAO_ROOT);$(DDS_ROOT);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>DEBUG;_MBCS;WIN32;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WIN32;_CONSOLE;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;MPC_LIB_MODIFIER="d";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>4635;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4635;4461;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <CallingConvention>Cdecl</CallingConvention>
+      <OmitFramePointers />
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>.;$(ACE_ROOT)\lib_x86;$(DDS_ROOT)\lib_x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ACEd.lib;TAOd.lib;OpenDDS_Dcpsd.lib;OpenDDS_Rtpsd.lib;OpenDDS_Rtps_Udpd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ACEd.lib;TAOd.lib;OpenDDS_Dcpsd.lib;OpenDDS_Rtpsd.lib;OpenDDS_InfoRepoDiscoveryd.lib;OpenDDS_Rtps_Udpd.lib;OpenDDS_Shmemd.lib;OpenDDS_Tcpd.lib;OpenDDS_Udpd.lib;OpenDDS_Multicastd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <Profile>true</Profile>
+      <OptimizeReferences>false</OptimizeReferences>
+      <LargeAddressAware>
+      </LargeAddressAware>
     </Link>
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
@@ -140,15 +147,17 @@
       <PreprocessorDefinitions>_DEBUG;WIN32;_AMD64_;_WIN64;_CONSOLE;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;MPC_LIB_MODIFIER="d";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>4635;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4635;4461;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <CallingConvention>Cdecl</CallingConvention>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>.;$(ACE_ROOT)\lib_x64;$(DDS_ROOT)\lib_x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ACEd.lib;TAOd.lib;OpenDDS_Dcpsd.lib;OpenDDS_Rtpsd.lib;OpenDDS_Rtps_Udpd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ACEd.lib;TAOd.lib;OpenDDS_Dcpsd.lib;OpenDDS_Rtpsd.lib;OpenDDS_InfoRepoDiscoveryd.lib;OpenDDS_Rtps_Udpd.lib;OpenDDS_Shmemd.lib;OpenDDS_Tcpd.lib;OpenDDS_Udpd.lib;OpenDDS_Multicastd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <Profile>true</Profile>
+      <OptimizeReferences>false</OptimizeReferences>
     </Link>
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
@@ -171,12 +180,12 @@
       <CallingConvention>Cdecl</CallingConvention>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>4635;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4635;4461;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>ACE.lib;TAO.lib;OpenDDS_Dcps.lib;OpenDDS_Rtps.lib;OpenDDS_Rtps_Udp.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ACE.lib;TAO.lib;OpenDDS_Dcps.lib;OpenDDS_Rtps.lib;OpenDDS_InfoRepoDiscovery.lib;OpenDDS_Rtps_Udp.lib;OpenDDS_Shmem.lib;OpenDDS_Tcp.lib;OpenDDS_Udp.lib;OpenDDS_Multicast.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>.;$(ACE_ROOT)\lib_x86;$(DDS_ROOT)\lib_x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AssemblyDebug>
       </AssemblyDebug>
@@ -189,7 +198,7 @@
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -208,12 +217,12 @@
       <CallingConvention>Cdecl</CallingConvention>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>4635;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4635;4461;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>ACE.lib;TAO.lib;OpenDDS_Dcps.lib;OpenDDS_Rtps.lib;OpenDDS_Rtps_Udp.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ACE.lib;TAO.lib;OpenDDS_Dcps.lib;OpenDDS_Rtps.lib;OpenDDS_InfoRepoDiscovery.lib;OpenDDS_Rtps_Udp.lib;OpenDDS_Shmem.lib;OpenDDS_Tcp.lib;OpenDDS_Udp.lib;OpenDDS_Multicast.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>.;$(ACE_ROOT)\lib_x64;$(DDS_ROOT)\lib_x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AssemblyDebug>
       </AssemblyDebug>
@@ -224,6 +233,7 @@
       <CLRUnmanagedCodeCheck>
       </CLRUnmanagedCodeCheck>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
+      <Profile>true</Profile>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -231,6 +241,8 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Ace.cpp" />
+    <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="BudgetExceededStatus.cpp" />
     <ClCompile Include="BuiltinTopicKey.cpp" />
     <ClCompile Include="Condition.cpp" />
@@ -261,6 +273,7 @@
     <ClCompile Include="GuardCondition.cpp" />
     <ClCompile Include="HistoryQosPolicy.cpp" />
     <ClCompile Include="InconsistentTopicStatus.cpp" />
+    <ClCompile Include="InfoRepoDiscovery.cpp" />
     <ClCompile Include="InstanceHandle.cpp" />
     <ClCompile Include="InstanceStateKind.cpp" />
     <ClCompile Include="InstanceStateMask.cpp" />
@@ -269,6 +282,7 @@
     <ClCompile Include="LivelinessChangedStatus.cpp" />
     <ClCompile Include="LivelinessLostStatus.cpp" />
     <ClCompile Include="LivelinessQosPolicy.cpp" />
+    <ClCompile Include="MulticastInst.cpp" />
     <ClCompile Include="MultiTopic.cpp" />
     <ClCompile Include="OfferedDeadlineMissedStatus.cpp" />
     <ClCompile Include="OfferedIncompatibleQosStatus.cpp" />
@@ -295,11 +309,14 @@
     <ClCompile Include="RequestedDeadlineMissedStatus.cpp" />
     <ClCompile Include="RequestedIncompatibleQosStatus.cpp" />
     <ClCompile Include="ResourceLimitsQosPolicy.cpp" />
+    <ClCompile Include="RtpsDiscovery.cpp" />
+    <ClCompile Include="RtpsUdpInst.cpp" />
     <ClCompile Include="SampleInfo.cpp" />
     <ClCompile Include="SampleLostStatus.cpp" />
     <ClCompile Include="SampleRejectedStatus.cpp" />
     <ClCompile Include="SampleStateKind.cpp" />
     <ClCompile Include="SampleStateMask.cpp" />
+    <ClCompile Include="ShmemInst.cpp" />
     <ClCompile Include="StatusCondition.cpp" />
     <ClCompile Include="StatusKind.cpp" />
     <ClCompile Include="StatusMask.cpp" />
@@ -312,6 +329,7 @@
     <ClCompile Include="SubscriptionLostStatus.cpp" />
     <ClCompile Include="SubscriptionMatchedStatus.cpp" />
     <ClCompile Include="SubscriptionReconnectedStatus.cpp" />
+    <ClCompile Include="TcpInst.cpp" />
     <ClCompile Include="TimeBasedFilterQosPolicy.cpp" />
     <ClCompile Include="Timestamp.cpp" />
     <ClCompile Include="Topic.cpp" />
@@ -321,7 +339,13 @@
     <ClCompile Include="TopicListener.cpp" />
     <ClCompile Include="TopicListenerNative.cpp" />
     <ClCompile Include="TopicQos.cpp" />
+    <ClCompile Include="TransportConfig.cpp" />
+    <ClCompile Include="TransportConfigManager.cpp" />
+    <ClCompile Include="TransportInst.cpp" />
+    <ClCompile Include="TransportInstManager.cpp" />
     <ClCompile Include="TransportPriorityQosPolicy.cpp" />
+    <ClCompile Include="TransportRegistry.cpp" />
+    <ClCompile Include="UdpInst.cpp" />
     <ClCompile Include="UserDataQosPolicy.cpp" />
     <ClCompile Include="ViewStateKind.cpp" />
     <ClCompile Include="ViewStateMask.cpp" />
@@ -329,6 +353,8 @@
     <ClCompile Include="WriterDataLifecycleQosPolicy.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Ace.h" />
+    <ClInclude Include="AssemblyInfo.h" />
     <ClInclude Include="BudgetExceededStatus.h" />
     <ClInclude Include="BuiltinTopicKey.h" />
     <ClInclude Include="Condition.h" />
@@ -344,6 +370,7 @@
     <ClInclude Include="DeadlineQosPolicy.h" />
     <ClInclude Include="DestinationOrderQosPolicy.h" />
     <ClInclude Include="DestinationOrderQosPolicyKind.h" />
+    <ClInclude Include="Discovery.h" />
     <ClInclude Include="DomainParticipant.h" />
     <ClInclude Include="DomainParticipantFactory.h" />
     <ClInclude Include="DomainParticipantFactoryQos.h" />
@@ -362,6 +389,7 @@
     <ClInclude Include="HistoryQosPolicy.h" />
     <ClInclude Include="HistoryQosPolicyKind.h" />
     <ClInclude Include="InconsistentTopicStatus.h" />
+    <ClInclude Include="InfoRepoDiscovery.h" />
     <ClInclude Include="InstanceHandle.h" />
     <ClInclude Include="InstanceStateKind.h" />
     <ClInclude Include="InstanceStateMask.h" />
@@ -372,6 +400,7 @@
     <ClInclude Include="LivelinessQosPolicy.h" />
     <ClInclude Include="LivelinessQosPolicyKind.h" />
     <ClInclude Include="LNK4248.h" />
+    <ClInclude Include="MulticastInst.h" />
     <ClInclude Include="MultiTopic.h" />
     <ClInclude Include="OfferedDeadlineMissedStatus.h" />
     <ClInclude Include="OfferedIncompatibleQosStatus.h" />
@@ -400,14 +429,18 @@
     <ClInclude Include="ReliabilityQosPolicyKind.h" />
     <ClInclude Include="RequestedDeadlineMissedStatus.h" />
     <ClInclude Include="RequestedIncompatibleQosStatus.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ResourceLimitsQosPolicy.h" />
     <ClInclude Include="ReturnCode.h" />
+    <ClInclude Include="RtpsDiscovery.h" />
+    <ClInclude Include="RtpsUdpInst.h" />
     <ClInclude Include="SampleInfo.h" />
     <ClInclude Include="SampleLostStatus.h" />
     <ClInclude Include="SampleRejectedStatus.h" />
     <ClInclude Include="SampleRejectedStatusKind.h" />
     <ClInclude Include="SampleStateKind.h" />
     <ClInclude Include="SampleStateMask.h" />
+    <ClInclude Include="ShmemInst.h" />
     <ClInclude Include="StatusCondition.h" />
     <ClInclude Include="StatusKind.h" />
     <ClInclude Include="StatusMask.h" />
@@ -420,8 +453,10 @@
     <ClInclude Include="SubscriptionLostStatus.h" />
     <ClInclude Include="SubscriptionMatchedStatus.h" />
     <ClInclude Include="SubscriptionReconnectedStatus.h" />
+    <ClInclude Include="TcpInst.h" />
     <ClInclude Include="TimeBasedFilterQosPolicy.h" />
     <ClInclude Include="Timestamp.h" />
+    <ClInclude Include="TimeValue.h" />
     <ClInclude Include="Topic.h" />
     <ClInclude Include="TopicBuiltinTopicData.h" />
     <ClInclude Include="TopicDataQosPolicy.h" />
@@ -430,7 +465,13 @@
     <ClInclude Include="TopicListener.h" />
     <ClInclude Include="TopicListenerNative.h" />
     <ClInclude Include="TopicQos.h" />
+    <ClInclude Include="TransportConfig.h" />
+    <ClInclude Include="TransportConfigManager.h" />
+    <ClInclude Include="TransportInst.h" />
+    <ClInclude Include="TransportInstManager.h" />
     <ClInclude Include="TransportPriorityQosPolicy.h" />
+    <ClInclude Include="TransportRegistry.h" />
+    <ClInclude Include="UdpInst.h" />
     <ClInclude Include="UserDataQosPolicy.h" />
     <ClInclude Include="ViewStateKind.h" />
     <ClInclude Include="ViewStateMask.h" />
@@ -449,6 +490,9 @@
     <None Include="OpenDDSharp.targets">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

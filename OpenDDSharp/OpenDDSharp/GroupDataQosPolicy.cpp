@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "GroupDataQosPolicy.h"
@@ -36,19 +36,19 @@ void OpenDDSharp::DDS::GroupDataQosPolicy::Value::set(IEnumerable<System::Byte>^
 		m_value = gcnew List<System::Byte>();
 	}
 
-	::DDS::GroupDataQosPolicy* qos = new ::DDS::GroupDataQosPolicy();
+	::DDS::GroupDataQosPolicy qos;
 
 	int count = System::Linq::Enumerable::Count(m_value);
-	qos->value.length(count);
+	qos.value.length(count);
 
 	int i = 0;
 	while (i < count) {
 		System::Byte byte = System::Linq::Enumerable::ElementAt(m_value, i);
-		qos->value[i] = static_cast<CORBA::Octet>(byte);
+		qos.value[i] = static_cast<CORBA::Octet>(byte);
 		i++;
 	}
 
-	return *qos;
+	return qos;
 };
 
 void OpenDDSharp::DDS::GroupDataQosPolicy::FromNative(::DDS::GroupDataQosPolicy qos) {

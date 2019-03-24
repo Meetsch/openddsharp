@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "DataReader.h"
@@ -24,8 +24,13 @@ along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 #include "QueryCondition.h"
 #include "TopicDescription.h"
 
-OpenDDSharp::DDS::DataReader::DataReader(::DDS::DataReader_ptr dataReader) : OpenDDSharp::DDS::Entity(dataReader) {
-	impl_entity = dataReader;
+OpenDDSharp::DDS::DataReader::DataReader(::DDS::DataReader_ptr dataReader) : OpenDDSharp::DDS::Entity(static_cast<::DDS::Entity_ptr>(dataReader)) {
+	impl_entity = ::DDS::DataReader::_duplicate(dataReader);
+    conditions = gcnew List<ReadCondition^>();
+}
+
+OpenDDSharp::DDS::DataReader::!DataReader() {
+    impl_entity = NULL;
 }
 
 OpenDDSharp::DDS::Subscriber^ OpenDDSharp::DDS::DataReader::Subscriber::get() {
@@ -42,12 +47,9 @@ OpenDDSharp::DDS::ReadCondition^ OpenDDSharp::DDS::DataReader::CreateReadConditi
 
 OpenDDSharp::DDS::ReadCondition^ OpenDDSharp::DDS::DataReader::CreateReadCondition(OpenDDSharp::DDS::SampleStateMask sampleStates, OpenDDSharp::DDS::ViewStateMask viewStates, OpenDDSharp::DDS::InstanceStateMask instanceStates) {
 	::DDS::ReadCondition_ptr native =  impl_entity->create_readcondition(sampleStates, viewStates, instanceStates);
-	if (native != NULL) {
-		return gcnew OpenDDSharp::DDS::ReadCondition(native, this);
-	}
-	else {
-		return nullptr;
-	}
+    ReadCondition^ condition = gcnew OpenDDSharp::DDS::ReadCondition(native, this);
+    conditions->Add(condition);
+    return condition;
 }
 
 OpenDDSharp::DDS::QueryCondition^ OpenDDSharp::DDS::DataReader::CreateQueryCondition(System::String^ queryExpression, ... array<System::String^>^ queryParameters) {
@@ -73,12 +75,13 @@ OpenDDSharp::DDS::QueryCondition^ OpenDDSharp::DDS::DataReader::CreateQueryCondi
 	}
 
 	::DDS::QueryCondition_ptr native = impl_entity->create_querycondition(sampleStates, viewStates, instanceStates, context.marshal_as<const char*>(queryExpression), seq);
-	if (native != NULL) {
-		return gcnew OpenDDSharp::DDS::QueryCondition(native, this);
-	}
-	else {
-		return nullptr;
-	}
+    if (native == NULL) {
+        return nullptr;
+    }
+
+    QueryCondition^ condition = gcnew OpenDDSharp::DDS::QueryCondition(native, this);
+    conditions->Add(condition);
+    return condition;
 }
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::DeleteReadCondition(OpenDDSharp::DDS::ReadCondition^ condition) {
@@ -86,11 +89,22 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::DeleteReadCondition(O
 		return OpenDDSharp::DDS::ReturnCode::Ok;
 	}
 
-	return (OpenDDSharp::DDS::ReturnCode)impl_entity->delete_readcondition(condition->impl_entity);
+    ::DDS::ReturnCode_t ret = impl_entity->delete_readcondition(condition->impl_entity);
+    if (ret == ::DDS::RETCODE_OK) {
+        conditions->Remove(condition);       
+    }
+
+    return (OpenDDSharp::DDS::ReturnCode)ret;
 }
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::DeleteContainedEntities() {
-	return (OpenDDSharp::DDS::ReturnCode)impl_entity->delete_contained_entities();
+    ::DDS::ReturnCode_t ret = impl_entity->delete_contained_entities();
+
+    if (ret == ::DDS::RETCODE_OK) {
+        ClearContainedEntities();
+    }
+
+	return (OpenDDSharp::DDS::ReturnCode)ret;
 }
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::SetQos(OpenDDSharp::DDS::DataReaderQos^ qos) {
@@ -124,10 +138,10 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::SetListener(OpenDDSha
 	_listener = listener;
 
 	if (_listener != nullptr) {
-		return (OpenDDSharp::DDS::ReturnCode)impl_entity->set_listener(listener->impl_entity, (System::UInt32)mask);
+		return (OpenDDSharp::DDS::ReturnCode)impl_entity->set_listener(listener->impl_entity, (::DDS::StatusMask)mask);
 	}
 	else {
-		return (OpenDDSharp::DDS::ReturnCode)impl_entity->set_listener(NULL, (System::UInt32)mask);
+		return (OpenDDSharp::DDS::ReturnCode)impl_entity->set_listener(NULL, (::DDS::StatusMask)mask);
 	}
 }
 
@@ -137,24 +151,15 @@ OpenDDSharp::OpenDDS::DCPS::DataReaderListener^ OpenDDSharp::DDS::DataReader::Ge
 
 OpenDDSharp::DDS::ITopicDescription^ OpenDDSharp::DDS::DataReader::GetTopicDescription() {		
 	::DDS::TopicDescription_ptr desc = impl_entity->get_topicdescription();
-	if (desc != NULL) {
-		return gcnew OpenDDSharp::DDS::TopicDescription(desc);
-	}
-	else {
-		return nullptr;
-	}
+	
+	return gcnew OpenDDSharp::DDS::TopicDescription(desc);
 }
 
 OpenDDSharp::DDS::Subscriber^ OpenDDSharp::DDS::DataReader::GetSubscriber() {
 	::DDS::Subscriber_ptr subscriber = impl_entity->get_subscriber();
 
-	OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(subscriber);
-	if (entity != nullptr) {
-		return static_cast<OpenDDSharp::DDS::Subscriber^>(entity);
-	}
-	else {
-		return nullptr;
-	}
+	OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(subscriber);	
+	return static_cast<OpenDDSharp::DDS::Subscriber^>(entity);	
 }
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::GetSampleRejectedStatus(OpenDDSharp::DDS::SampleRejectedStatus% status) {
@@ -234,6 +239,7 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::GetMatchedPublication
 		System::UInt32 i = 0;
 		while (i < seq.length()) {
 			publicationHandles->Add(seq[i]);
+            i++;
 		}
 	}
 
@@ -249,4 +255,11 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataReader::GetMatchedPublication
 	}
 
 	return (OpenDDSharp::DDS::ReturnCode)ret;
+}
+
+void OpenDDSharp::DDS::DataReader::ClearContainedEntities() {
+    for each (ReadCondition^ e in conditions) {        
+        e->impl_entity = NULL;
+    }
+    conditions->Clear();
 }

@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS.
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 using System;
@@ -25,6 +25,7 @@ using Microsoft.Build.Utilities;
 using EnvDTE;
 using EnvDTE80;
 using System.Runtime.InteropServices;
+using EnvDTE100;
 
 namespace OpenDDSharp.BuildTasks
 {    
@@ -32,7 +33,7 @@ namespace OpenDDSharp.BuildTasks
     {
         #region Fields
         private DTE2 _dte;
-        private Solution2 _solution;
+        private Solution4 _solution;
         private Project _project;
         private string _solutionName;
         private string _projectName;
@@ -59,12 +60,17 @@ namespace OpenDDSharp.BuildTasks
         #endregion
 
         #region Methods
-        [STAThread]
         public override bool Execute()
         {
-            Log.LogMessage(MessageImportance.High, "Generating native IDL library...");
+            Log.LogMessage(MessageImportance.High, "Generating native IDL library...");            
 
             Initialize();
+#if DEBUG
+            Log.LogMessage(MessageImportance.High, "TemplatePath: " + TemplatePath);
+            Log.LogMessage(MessageImportance.High, "IntDir: " + IntDir);
+            Log.LogMessage(MessageImportance.High, "_projectName: " + _projectName);
+#endif
+
             GenerateSolutionFile();
             GenerateProjectFile();
             CopyIdlFiles();
@@ -76,22 +82,116 @@ namespace OpenDDSharp.BuildTasks
 
         private void Initialize()
         {
+            TemplatePath = Path.GetFullPath(TemplatePath);
+            IntDir = Path.GetFullPath(IntDir);
+
             _solutionName = OriginalProjectName + "NativeSolution";
-            _projectName = OriginalProjectName + "Native";
+            _projectName = OriginalProjectName + "Native.vcxproj";
+
+            string fullPath = Path.Combine(IntDir, _projectName);
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+
+            fullPath = Path.Combine(IntDir, _projectName + ".filters");
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+
+            fullPath = Path.Combine(IntDir, _projectName + ".user");
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
 
             Type type = Type.GetTypeFromProgID("VisualStudio.DTE.15.0");
-            Object obj = Activator.CreateInstance(type, true);
+            object obj = Activator.CreateInstance(type, true);
             _dte = (DTE2)obj;
         }
 
         private void GenerateSolutionFile()
-        {           
-            _dte.Solution.Create(IntDir, _solutionName);
-            _solution = (Solution2)_dte.Solution;
+        {
+            string fullPath = Path.Combine(IntDir, _solutionName + ".sln");
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+
+            int retry = 100;
+            bool success = false;
+            while (!success && retry > 0)
+            {
+                try
+                {
+                    _dte.Solution.Create(IntDir, _solutionName);
+
+                    success = true;
+                }
+#if DEBUG
+                catch (Exception ex)
+#else
+                catch
+#endif
+                {
+                    success = false;
+                    retry--;
+
+                    if (retry > 0)
+                    {
+                        System.Threading.Thread.Sleep(150);
+
+#if DEBUG
+                        Log.LogMessage(MessageImportance.High, "Exception: " + ex.ToString());
+#endif
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            retry = 100;
+            success = false;
+            while (!success && retry > 0)
+            {
+                try
+                {
+                    _solution = (Solution4)_dte.Solution;
+                    success = true;
+                }
+#if DEBUG
+                catch (Exception ex)
+#else
+                catch
+#endif
+                {
+                    success = false;
+                    retry--;
+
+                    if (retry > 0)
+                    {
+                        System.Threading.Thread.Sleep(150);
+
+#if DEBUG
+                        Log.LogMessage(MessageImportance.High, "Exception: " + ex.ToString());
+#endif
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
         }
 
         private void GenerateProjectFile()
         {
+            AddProjectTemplate();
+            GetCreatedProject();
+
             int retry = 100;
             bool success = false;
 
@@ -99,12 +199,6 @@ namespace OpenDDSharp.BuildTasks
             {
                 try
                 {
-                    if (_project != null)
-                        _solution.Remove(_project);
-
-                    _solution.AddFromTemplate(TemplatePath, IntDir, _projectName);
-                    _project = _solution.Projects.Item(1);
-
                     foreach (ITaskItem s in IdlFiles)
                     {
                         string filename = s.GetMetadata("Filename");
@@ -125,6 +219,7 @@ namespace OpenDDSharp.BuildTasks
                         _project.ProjectItems.AddFromFile(filename + "C.inl");
                         _project.ProjectItems.AddFromFile(filename + "TypeSupportC.inl");
                     }
+
                     _project.Save();
 
                     // No really elegant but I couldn't cast the project to VCProject because the "Interface not registered" and M$ says that it is not a bug :S
@@ -143,20 +238,113 @@ namespace OpenDDSharp.BuildTasks
                             node.InnerXml = string.Format("{0}IDL_BUILD_DLL;{1}", fileName.ToUpper(), node.InnerXml);
                         }
                     }
+
                     doc.Save(_project.FullName);
                     success = true;
                 }
-                catch (COMException)
+#if DEBUG
+                catch (Exception ex)
+#else
+                catch
+#endif
                 {
                     success = false;
                     retry--;
-                    
+
                     if (retry > 0)
+                    {
                         System.Threading.Thread.Sleep(150);
+
+#if DEBUG
+                        Log.LogMessage(MessageImportance.High, "Exception: " + ex.ToString());
+#endif
+                    }
                     else
-                        throw;                    
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
+        private void AddProjectTemplate()
+        {
+            int retry = 100;
+            bool success = false;
+
+            while (!success && retry > 0)
+            {
+                try
+                {
+                    _solution.AddFromTemplate(TemplatePath, IntDir, _projectName, false);
+
+                    success = true;
+                }
+#if DEBUG
+                catch (Exception ex)
+#else
+                catch
+#endif
+                {
+                    success = false;
+                    retry--;
+
+                    if (retry > 0)
+                    {
+                        System.Threading.Thread.Sleep(150);
+
+#if DEBUG
+                        Log.LogMessage(MessageImportance.High, "Exception: " + ex.ToString());
+#endif
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }            
+        }
+
+        private void GetCreatedProject()
+        {
+            int retry = 100;
+            bool success = false;
+            while (!success && retry > 0)
+            {
+                try
+                {
+                    _project = _solution.Projects.Item(1);
+
+                    success = true;
+                }
+#if DEBUG
+                catch (Exception ex)
+#else
+                catch
+#endif
+                {
+                    success = false;
+                    retry--;
+
+                    if (retry > 0)
+                    {
+                        System.Threading.Thread.Sleep(150);
+
+#if DEBUG
+                        Log.LogMessage(MessageImportance.High, "Exception: " + ex.ToString());
+#endif
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            if (_project == null)
+            {
+                throw new ApplicationException("The project couldn't be created.");
+            }
         }
 
         private void CopyIdlFiles()
@@ -201,15 +389,26 @@ namespace OpenDDSharp.BuildTasks
                     _solution.SolutionBuild.BuildProject(solutionConfiguration, _project.FullName, true);
                     success = true;
                 }
-                catch (COMException)
+#if DEBUG
+                catch (Exception ex)
+#else
+                catch
+#endif
                 {
                     success = false;
                     retry--;
 
                     if (retry > 0)
+                    {
                         System.Threading.Thread.Sleep(150);
+#if DEBUG
+                        Log.LogMessage(MessageImportance.High, "Exception: " + ex.ToString());
+#endif
+                    }
                     else
+                    {
                         throw;
+                    }
                 }
             }
         }

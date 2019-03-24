@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS.
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 using System;
@@ -32,6 +32,8 @@ namespace ConsoleDemo
         static void Main(string[] args)
         {
             bool useListener = true;
+
+            OpenDDSharp.Ace.Init();
 
             ParticipantService participantService = ParticipantService.Instance;
             DomainParticipantFactory domainFactory = participantService.GetDomainParticipantFactory(args);
@@ -92,8 +94,8 @@ namespace ConsoleDemo
                 if (!useListener)
                 {
                     waitSet = new WaitSet();
-                    
-                    waitSet.AttachCondition(dataReader.StatusCondition);
+                    statusCondition = dataReader.StatusCondition;
+                    waitSet.AttachCondition(statusCondition);
                     statusCondition.EnabledStatuses = StatusKind.DataAvailableStatus;
 
                     new System.Threading.Thread(delegate ()
@@ -188,13 +190,12 @@ namespace ConsoleDemo
                 if (!useListener)
                     waitSet.DetachCondition(statusCondition);                    
                 
-
-                
                 participant.DeleteContainedEntities();
-                domainFactory.DeleteParticipant(participant);
+                domainFactory.DeleteParticipant(participant);                
             }            
             
             participantService.Shutdown();
+            OpenDDSharp.Ace.Fini();
 
             Console.WriteLine("Press ENTER to finish the test.");
             Console.ReadLine();
@@ -204,11 +205,7 @@ namespace ConsoleDemo
         {
             try
             {
-                TestStructDataReader dr = new TestStructDataReader(reader);
-                
-                //SampleInfo info = new SampleInfo();
-                //TestStruct sample = new TestStruct();
-                //ReturnCode error = dr.TakeNextSample(sample, info);
+                TestStructDataReader dr = new TestStructDataReader(reader);               
 
                 List<TestStruct> samples = new List<TestStruct>();
                 List<SampleInfo> infos = new List<SampleInfo>();
@@ -354,11 +351,6 @@ namespace ConsoleDemo
         public override void OnBudgetExceeded(DataReader reader, BudgetExceededStatus status)
         {
             Console.WriteLine(nameof(OnBudgetExceeded));
-        }
-
-        public override void OnConnectionDeleted(DataReader reader)
-        {
-            Console.WriteLine(nameof(OnConnectionDeleted));
         }
     }
 }

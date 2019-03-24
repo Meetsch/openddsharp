@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "PartitionQosPolicy.h"
@@ -38,19 +38,19 @@ void OpenDDSharp::DDS::PartitionQosPolicy::Name::set(IEnumerable<System::String^
 		name = gcnew List<System::String^>();
 	}
 
-	::DDS::PartitionQosPolicy* qos = new ::DDS::PartitionQosPolicy();
+	::DDS::PartitionQosPolicy qos;
 
 	int count = System::Linq::Enumerable::Count(name);
-	qos->name.length(count);
+	qos.name.length(count);
 
 	int i = 0;
 	while (i < count) {
 		System::String^ str = System::Linq::Enumerable::ElementAt(name, i);
-		qos->name[i] = context.marshal_as<const char*>(str);
+		qos.name[i] = context.marshal_as<const char*>(str);
 		i++;
 	}
 
-	return *qos;
+	return qos;
 };
 
 void OpenDDSharp::DDS::PartitionQosPolicy::FromNative(::DDS::PartitionQosPolicy qos) {

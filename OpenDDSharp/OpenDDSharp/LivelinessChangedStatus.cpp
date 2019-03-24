@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "LivelinessChangedStatus.h"
@@ -46,18 +46,6 @@ System::Int32 OpenDDSharp::DDS::LivelinessChangedStatus::NotAliveCountChange::ge
 OpenDDSharp::DDS::InstanceHandle OpenDDSharp::DDS::LivelinessChangedStatus::LastPublicationHandle::get() {
 	return last_publication_handle;
 };
-
-::DDS::LivelinessChangedStatus OpenDDSharp::DDS::LivelinessChangedStatus::ToNative() {
-	::DDS::LivelinessChangedStatus ret;
-
-	ret.alive_count = alive_count;
-	ret.alive_count_change = alive_count_change;
-	ret.last_publication_handle = last_publication_handle;
-	ret.not_alive_count = not_alive_count;
-	ret.not_alive_count_change = not_alive_count_change;
-
-	return ret;
-}
 
 void OpenDDSharp::DDS::LivelinessChangedStatus::FromNative(::DDS::LivelinessChangedStatus native) {
 	alive_count = native.alive_count;

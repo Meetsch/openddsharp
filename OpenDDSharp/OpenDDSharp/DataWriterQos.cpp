@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "DataWriterQos.h"
@@ -26,6 +26,12 @@ OpenDDSharp::DDS::DataWriterQos::DataWriterQos() {
 	latency_budget = gcnew OpenDDSharp::DDS::LatencyBudgetQosPolicy();
 	liveliness = gcnew OpenDDSharp::DDS::LivelinessQosPolicy();
 	reliability = gcnew OpenDDSharp::DDS::ReliabilityQosPolicy();
+    reliability->Kind = OpenDDSharp::DDS::ReliabilityQosPolicyKind::ReliableReliabilityQos;
+    Duration duration;
+    duration.Seconds = 0;
+    duration.NanoSeconds = 100000000;
+    reliability->MaxBlockingTime = duration;
+    
 	destination_order = gcnew OpenDDSharp::DDS::DestinationOrderQosPolicy();
 	history = gcnew OpenDDSharp::DDS::HistoryQosPolicy();
 	resource_limits = gcnew OpenDDSharp::DDS::ResourceLimitsQosPolicy();
@@ -98,25 +104,25 @@ OpenDDSharp::DDS::WriterDataLifecycleQosPolicy^ OpenDDSharp::DDS::DataWriterQos:
 };
 
 ::DDS::DataWriterQos OpenDDSharp::DDS::DataWriterQos::ToNative() {
-	::DDS::DataWriterQos* qos = new ::DDS::DataWriterQos();
+	::DDS::DataWriterQos qos;
 	
-	qos->durability = durability->ToNative();
-	qos->durability_service = durability_service->ToNative();
-	qos->deadline = deadline->ToNative();
-	qos->latency_budget = latency_budget->ToNative();
-	qos->liveliness = liveliness->ToNative();
-	qos->reliability = reliability->ToNative();
-	qos->destination_order = destination_order->ToNative();
-	qos->history = history->ToNative();
-	qos->resource_limits = resource_limits->ToNative();
-	qos->transport_priority = transport_priority->ToNative();
-	qos->lifespan = lifespan->ToNative();
-	qos->ownership = ownership->ToNative();
-	qos->user_data = user_data->ToNative();
-	qos->ownership_strength = ownership_strength->ToNative();
-	qos->writer_data_lifecycle = writer_data_lifecycle->ToNative();
+	qos.durability = durability->ToNative();
+	qos.durability_service = durability_service->ToNative();
+	qos.deadline = deadline->ToNative();
+	qos.latency_budget = latency_budget->ToNative();
+	qos.liveliness = liveliness->ToNative();
+	qos.reliability = reliability->ToNative();
+	qos.destination_order = destination_order->ToNative();
+	qos.history = history->ToNative();
+	qos.resource_limits = resource_limits->ToNative();
+	qos.transport_priority = transport_priority->ToNative();
+	qos.lifespan = lifespan->ToNative();
+	qos.ownership = ownership->ToNative();
+	qos.user_data = user_data->ToNative();
+	qos.ownership_strength = ownership_strength->ToNative();
+	qos.writer_data_lifecycle = writer_data_lifecycle->ToNative();
 
-	return *qos;
+	return qos;
 };
 
 void OpenDDSharp::DDS::DataWriterQos::FromNative(::DDS::DataWriterQos qos) {	

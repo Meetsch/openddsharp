@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #pragma once
@@ -45,8 +45,7 @@ namespace OpenDDSharp {
 				std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::SubscriptionDisconnectedStatus)> _onSubscriptionDisconnected;
 				std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::SubscriptionReconnectedStatus)> _onSubscriptionReconnected;
 				std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::SubscriptionLostStatus)> _onSubscriptionLost;
-				std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::BudgetExceededStatus)> _onBudgetExceeded;
-				std::function<void(::DDS::DataReader_ptr)> _onConnectionDeleted;
+				std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::BudgetExceededStatus)> _onBudgetExceeded;				
 
 			public:
 				DataReaderListenerNative(std::function<void(::DDS::DataReader_ptr)> onDataAvalaible,
@@ -59,11 +58,11 @@ namespace OpenDDSharp {
 									     std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::SubscriptionDisconnectedStatus)> onSubscriptionDisconnected,
 									     std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::SubscriptionReconnectedStatus)> onSubscriptionReconnected,
 									     std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::SubscriptionLostStatus)> onSubscriptionLost,
-									     std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::BudgetExceededStatus)> onBudgetExceeded,
-									     std::function<void(::DDS::DataReader_ptr)> onConnectionDeleted);
+									     std::function<void(::DDS::DataReader_ptr, ::OpenDDS::DCPS::BudgetExceededStatus)> onBudgetExceeded);
+            protected:
+				virtual ~DataReaderListenerNative();
 
-				virtual ~DataReaderListenerNative(void);
-
+            public:
 				virtual void on_data_available(::DDS::DataReader_ptr reader);
 
 				virtual void on_requested_deadline_missed(::DDS::DataReader_ptr reader, const ::DDS::RequestedDeadlineMissedStatus & status);
@@ -86,7 +85,6 @@ namespace OpenDDSharp {
 
 				virtual void on_budget_exceeded(::DDS::DataReader_ptr reader, const ::OpenDDS::DCPS::BudgetExceededStatus& status);
 
-				virtual void on_connection_deleted(::DDS::DataReader_ptr);
 			};
 
 		};

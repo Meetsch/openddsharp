@@ -5,24 +5,28 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "DataWriter.h"
 #include "DataWriterListener.h"
 #include "Publisher.h"
 
-OpenDDSharp::DDS::DataWriter::DataWriter(::DDS::DataWriter_ptr dataWriter) : OpenDDSharp::DDS::Entity(dataWriter) {
-	impl_entity = dataWriter;	
+OpenDDSharp::DDS::DataWriter::DataWriter(::DDS::DataWriter_ptr dataWriter) : OpenDDSharp::DDS::Entity(static_cast<::DDS::Entity_ptr>(dataWriter)) {
+	impl_entity = ::DDS::DataWriter::_duplicate(dataWriter);
+}
+
+OpenDDSharp::DDS::DataWriter::!DataWriter() {
+    impl_entity = NULL;
 }
 
 OpenDDSharp::DDS::Topic^ OpenDDSharp::DDS::DataWriter::Topic::get() {
@@ -79,24 +83,14 @@ OpenDDSharp::DDS::Topic^ OpenDDSharp::DDS::DataWriter::GetTopic() {
 	::DDS::Topic_ptr topic = impl_entity->get_topic();
 
 	OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(topic);
-	if (entity != nullptr) {
-		return static_cast<OpenDDSharp::DDS::Topic^>(entity);
-	}
-	else {
-		return nullptr;
-	}
+	return static_cast<OpenDDSharp::DDS::Topic^>(entity);	
 }
 
 OpenDDSharp::DDS::Publisher^ OpenDDSharp::DDS::DataWriter::GetPublisher() {
 	::DDS::Publisher_ptr publisher = impl_entity->get_publisher();
 
-	OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(publisher);
-	if (entity != nullptr) {
-		return static_cast<OpenDDSharp::DDS::Publisher^>(entity);
-	}
-	else {
-		return nullptr;
-	}
+	OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(publisher);	
+	return static_cast<OpenDDSharp::DDS::Publisher^>(entity);	
 }
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataWriter::WaitForAcknowledgments(OpenDDSharp::DDS::Duration maxWait) {
@@ -161,6 +155,7 @@ OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DataWriter::GetMatchedSubscriptio
 		System::UInt32 i = 0;
 		while (i < seq.length()) {
 			subscriptionHandles->Add(seq[i]);
+            i++;
 		}
 	}
 

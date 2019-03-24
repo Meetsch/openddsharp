@@ -10,7 +10,9 @@ namespace OpenDDSharp.HelloWorldSubscriber
     {
         static void Main(string[] args)
         {
-            DomainParticipantFactory dpf = ParticipantService.Instance.GetDomainParticipantFactory();
+            Ace.Init();
+
+            DomainParticipantFactory dpf = ParticipantService.Instance.GetDomainParticipantFactory("-DCPSConfigFile", "rtps.ini");
             DomainParticipant participant = dpf.CreateParticipant(42);
             if (participant == null)
             {
@@ -45,7 +47,7 @@ namespace OpenDDSharp.HelloWorldSubscriber
 
             while (true)
             {
-                StatusMask mask = messageReader.GetStatusChanges();
+                StatusMask mask = messageReader.StatusChanges;
                 if ((mask & StatusKind.DataAvailableStatus) != 0)
                 {
                     List<Message> receivedData = new List<Message>();
@@ -78,6 +80,8 @@ namespace OpenDDSharp.HelloWorldSubscriber
             participant.DeleteContainedEntities();
             dpf.DeleteParticipant(participant);
             ParticipantService.Instance.Shutdown();
+
+            Ace.Fini();
         }
     }
 }

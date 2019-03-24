@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "SampleInfo.h"
@@ -83,23 +83,4 @@ void OpenDDSharp::DDS::SampleInfo::FromNative(::DDS::SampleInfo native) {
 	sample_rank = native.sample_rank;
 	generation_rank = native.generation_rank;
 	absolute_generation_rank = native.absolute_generation_rank;
-}
-
-::DDS::SampleInfo OpenDDSharp::DDS::SampleInfo::ToNative() {
-	::DDS::SampleInfo ret;
-
-	ret.valid_data = valid_data;
-	ret.sample_state = sample_state;
-	ret.view_state = view_state;
-	ret.instance_state = instance_state;
-	ret.source_timestamp = source_timestamp.ToNative();
-	ret.instance_handle = instance_handle;
-	ret.publication_handle = publication_handle;
-	ret.disposed_generation_count = disposed_generation_count;
-	ret.no_writers_generation_count = no_writers_generation_count;
-	ret.sample_rank = sample_rank;
-	ret.generation_rank = generation_rank;
-	ret.absolute_generation_rank = absolute_generation_rank;
-
-	return ret;
 }

@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #pragma once
@@ -47,8 +47,16 @@ namespace OpenDDSharp {
 			typedef void(__stdcall *onPublicationMatchedDeclaration)(::DDS::DataWriter_ptr writer, const ::DDS::PublicationMatchedStatus& status);
 			typedef void(__stdcall *onPublicationDisconnectedDeclaration)(::DDS::DataWriter_ptr reader, const ::OpenDDS::DCPS::PublicationDisconnectedStatus& status);
 			typedef void(__stdcall *onPublicationReconnectedDeclaration)(::DDS::DataWriter_ptr reader, const ::OpenDDS::DCPS::PublicationReconnectedStatus& status);
-			typedef void(__stdcall *onPublicationLostDeclaration)(::DDS::DataWriter_ptr reader, const ::OpenDDS::DCPS::PublicationLostStatus& status);
-			typedef void(__stdcall *onConnectionDeletedDeclaration)(::DDS::DataWriter_ptr writer);
+			typedef void(__stdcall *onPublicationLostDeclaration)(::DDS::DataWriter_ptr reader, const ::OpenDDS::DCPS::PublicationLostStatus& status);			
+
+            private:
+                System::Runtime::InteropServices::GCHandle gchOfferedDeadlineMissed;
+                System::Runtime::InteropServices::GCHandle gchOfferedIncompatibleQos;
+                System::Runtime::InteropServices::GCHandle gchLivelinessLost;
+                System::Runtime::InteropServices::GCHandle gchPublicationMatched;
+                System::Runtime::InteropServices::GCHandle gchPublicationDisconnected;
+                System::Runtime::InteropServices::GCHandle gchPublicationReconnected;
+                System::Runtime::InteropServices::GCHandle gchPublicationLost;               
 
 			internal:
 				::OpenDDSharp::OpenDDS::DCPS::DataWriterListenerNative* impl_entity;
@@ -60,10 +68,9 @@ namespace OpenDDSharp {
 				onPublicationMatchedDeclaration onPublicationMatchedFunctionCpp;
 				onPublicationDisconnectedDeclaration onPublicationDisconnectedFunctionCpp;
 				onPublicationReconnectedDeclaration onPublicationReconnectedFunctionCpp;
-				onPublicationLostDeclaration onPublicationLostFunctionCpp;
-				onConnectionDeletedDeclaration onConnectionDeletedFunctionCpp;
+				onPublicationLostDeclaration onPublicationLostFunctionCpp;				
 
-			private:
+			private:                
 				delegate void onOfferedDeadlineMissedDelegate(::DDS::DataWriter_ptr writer, const ::DDS::OfferedDeadlineMissedStatus & status);
 				void onOfferedDeadlineMissed(::DDS::DataWriter_ptr writer, const ::DDS::OfferedDeadlineMissedStatus & status) {
 					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
@@ -74,7 +81,7 @@ namespace OpenDDSharp {
 
 					OnOfferedDeadlineMissed(dataWriter, OpenDDSharp::DDS::OfferedDeadlineMissedStatus(status));
 				};
-
+                
 				delegate void onOfferedIncompatibleQosDelegate(::DDS::DataWriter_ptr writer, const ::DDS::OfferedIncompatibleQosStatus & status);
 				void onOfferedIncompatibleQos(::DDS::DataWriter_ptr writer, const ::DDS::OfferedIncompatibleQosStatus & status) {
 					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
@@ -85,7 +92,7 @@ namespace OpenDDSharp {
 
 					OnOfferedIncompatibleQos(dataWriter, OpenDDSharp::DDS::OfferedIncompatibleQosStatus(status));
 				};
-
+                
 				delegate void onLivelinessLostDelegate(::DDS::DataWriter_ptr writer, const ::DDS::LivelinessLostStatus & status);
 				void onLivelinessLost(::DDS::DataWriter_ptr writer, const ::DDS::LivelinessLostStatus & status) {
 					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
@@ -96,7 +103,7 @@ namespace OpenDDSharp {
 
 					OnLivelinessLost(dataWriter, OpenDDSharp::DDS::LivelinessLostStatus(status));
 				};
-
+                
 				delegate void onPublicationMatchedDelegate(::DDS::DataWriter_ptr writer, const ::DDS::PublicationMatchedStatus & status);
 				void onPublicationMatched(::DDS::DataWriter_ptr writer, const ::DDS::PublicationMatchedStatus & status) {
 					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
@@ -107,7 +114,7 @@ namespace OpenDDSharp {
 
 					OnPublicationMatched(dataWriter, OpenDDSharp::DDS::PublicationMatchedStatus(status));
 				};
-
+                
 				delegate void onPublicationDisconnectedDelegate(::DDS::DataWriter_ptr writer, const ::OpenDDS::DCPS::PublicationDisconnectedStatus& status);
 				void onPublicationDisconnected(::DDS::DataWriter_ptr writer, const ::OpenDDS::DCPS::PublicationDisconnectedStatus& status) {
 					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
@@ -118,7 +125,7 @@ namespace OpenDDSharp {
 
 					OnPublicationDisconnected(dataWriter, OpenDDSharp::OpenDDS::DCPS::PublicationDisconnectedStatus(status));
 				};
-
+                
 				delegate void onPublicationReconnectedDelegate(::DDS::DataWriter_ptr writer, const ::OpenDDS::DCPS::PublicationReconnectedStatus& status);
 				void onPublicationReconnected(::DDS::DataWriter_ptr writer, const ::OpenDDS::DCPS::PublicationReconnectedStatus& status) {
 					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
@@ -129,7 +136,7 @@ namespace OpenDDSharp {
 
 					OnPublicationReconnected(dataWriter, OpenDDSharp::OpenDDS::DCPS::PublicationReconnectedStatus(status));
 				};
-
+                
 				delegate void onPublicationLostDelegate(::DDS::DataWriter_ptr writer, const ::OpenDDS::DCPS::PublicationLostStatus& status);
 				void onPublicationLost(::DDS::DataWriter_ptr writer, const ::OpenDDS::DCPS::PublicationLostStatus& status) {
 					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
@@ -141,22 +148,14 @@ namespace OpenDDSharp {
 					OnPublicationLost(dataWriter, OpenDDSharp::OpenDDS::DCPS::PublicationLostStatus(status));
 				};
 
-				delegate void onConnectionDeletedDelegate(::DDS::DataWriter_ptr writer);
-				void onConnectionDeleted(::DDS::DataWriter_ptr writer) {
-					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(writer);
-					OpenDDSharp::DDS::DataWriter^ dataWriter = nullptr;
-					if (entity != nullptr) {
-						dataWriter = static_cast<OpenDDSharp::DDS::DataWriter^>(entity);
-					}					
-
-					OnConnectionDeleted(gcnew OpenDDSharp::DDS::DataWriter(writer));
-				};
-
 			public:
 				/// <summary>
-				/// Creates a new instance of <see cref="DataWriterListener" />
+				/// Creates a new instance of <see cref="DataWriterListener" />.
 				/// </summary>
 				DataWriterListener();
+
+            protected:
+                !DataWriterListener();
 
 			public:
 				/// <summary>
@@ -220,11 +219,6 @@ namespace OpenDDSharp {
 				/// <param name="status">The current <see cref="OpenDDSharp::OpenDDS::DCPS::PublicationLostStatus" />.</param>
 				virtual void OnPublicationLost(OpenDDSharp::DDS::DataWriter^ writer, OpenDDSharp::OpenDDS::DCPS::PublicationLostStatus status) = 0;
 
-				/// <summary>
-				/// Called when the publication connection object is cleaned up and the reconnect thread exits.
-				/// </summary>
-				/// <param name="writer">The <see cref="OpenDDSharp::DDS::DataWriter" /> that triggered the event.</param>
-				virtual void OnConnectionDeleted(OpenDDSharp::DDS::DataWriter^ writer) = 0;
 			};
 		};
 	};

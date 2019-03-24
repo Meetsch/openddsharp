@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "TransportPriorityQosPolicy.h"
@@ -32,11 +32,11 @@ void OpenDDSharp::DDS::TransportPriorityQosPolicy::Value::set(System::Int32 valu
 };
 
 ::DDS::TransportPriorityQosPolicy OpenDDSharp::DDS::TransportPriorityQosPolicy::ToNative() {
-	::DDS::TransportPriorityQosPolicy* qos = new ::DDS::TransportPriorityQosPolicy();
+	::DDS::TransportPriorityQosPolicy qos;
 
-	qos->value = m_value;	
+	qos.value = m_value;	
 
-	return *qos;
+	return qos;
 };
 
 void OpenDDSharp::DDS::TransportPriorityQosPolicy::FromNative(::DDS::TransportPriorityQosPolicy qos) {

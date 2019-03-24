@@ -5,22 +5,26 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "ContentFilteredTopic.h"
 
 OpenDDSharp::DDS::ContentFilteredTopic::ContentFilteredTopic(::DDS::ContentFilteredTopic_ptr native) : TopicDescription(native) {
-	impl_entity = native;
+	impl_entity = ::DDS::ContentFilteredTopic::_duplicate(native);
+}
+
+OpenDDSharp::DDS::ContentFilteredTopic::!ContentFilteredTopic() {
+    impl_entity = NULL;
 }
 
 System::String^ OpenDDSharp::DDS::ContentFilteredTopic::FilterExpression::get() {
@@ -35,12 +39,7 @@ System::String^ OpenDDSharp::DDS::ContentFilteredTopic::GetFilterExpression() {
 	msclr::interop::marshal_context context;
 
 	const char* filter = impl_entity->get_filter_expression();
-	if (filter != NULL) {
-		return context.marshal_as<System::String^>(filter);
-	}
-	else {
-		return nullptr;
-	}
+	return context.marshal_as<System::String^>(filter);	
 }
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::ContentFilteredTopic::GetExpressionParameters(IList<System::String^>^ params) {
@@ -88,10 +87,5 @@ OpenDDSharp::DDS::Topic^ OpenDDSharp::DDS::ContentFilteredTopic::GetRelatedTopic
 	::DDS::Topic_ptr topic = impl_entity->get_related_topic();
 
 	OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(topic);
-	if (entity != nullptr) {
-		return static_cast<OpenDDSharp::DDS::Topic^>(entity);
-	}
-	else {
-		return nullptr;
-	}
+	return static_cast<OpenDDSharp::DDS::Topic^>(entity);	
 }

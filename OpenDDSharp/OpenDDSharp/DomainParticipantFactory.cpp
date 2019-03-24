@@ -5,23 +5,28 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #include "DomainParticipantFactory.h"
+#include "ParticipantService.h"
 
 OpenDDSharp::DDS::DomainParticipantFactory::DomainParticipantFactory(::DDS::DomainParticipantFactory_ptr factory) {
-	impl_entity = factory;
+	impl_entity = ::DDS::DomainParticipantFactory::_duplicate(factory);
 };
+
+OpenDDSharp::DDS::DomainParticipantFactory::!DomainParticipantFactory() {
+    impl_entity = NULL;
+}
 
 OpenDDSharp::DDS::DomainParticipant^ OpenDDSharp::DDS::DomainParticipantFactory::CreateParticipant(System::Int32 domainId) {
 	return OpenDDSharp::DDS::DomainParticipantFactory::CreateParticipant(domainId, nullptr, nullptr, StatusMask::NoStatusMask);
@@ -44,18 +49,12 @@ OpenDDSharp::DDS::DomainParticipant^ OpenDDSharp::DDS::DomainParticipantFactory:
 };
 
 OpenDDSharp::DDS::DomainParticipant^ OpenDDSharp::DDS::DomainParticipantFactory::CreateParticipant(System::Int32 domainId, OpenDDSharp::DDS::DomainParticipantQos^ qos, OpenDDSharp::OpenDDS::DCPS::DomainParticipantListener^ listener, StatusMask statusMask) {
-	if (domainId < 0 || domainId > 232) {
-		return nullptr;
-	}
-
 	::DDS::DomainParticipantQos dpQos;
 	if (qos != nullptr) {
 		dpQos = qos->ToNative();
 	}
 	else {
-		if (impl_entity->get_default_participant_qos(dpQos) != ::DDS::RETCODE_OK) {
-			dpQos = ::PARTICIPANT_QOS_DEFAULT;
-		}
+        impl_entity->get_default_participant_qos(dpQos);
 	}
 
 	::DDS::DomainParticipantListener_var lst = NULL;
@@ -64,18 +63,16 @@ OpenDDSharp::DDS::DomainParticipant^ OpenDDSharp::DDS::DomainParticipantFactory:
 	}
 
 	::DDS::DomainParticipant_ptr participant = this->impl_entity->create_participant(domainId, dpQos, lst, (System::UInt32)statusMask);
+    if (participant == NULL) {
+        return nullptr;
+    }
 
-	if (participant != NULL) {
-		OpenDDSharp::DDS::DomainParticipant^ p = gcnew OpenDDSharp::DDS::DomainParticipant(participant);
-		p->m_listener = listener;
+    OpenDDSharp::DDS::DomainParticipant^ p = gcnew OpenDDSharp::DDS::DomainParticipant(participant);
+    p->m_listener = listener;
 
-		EntityManager::get_instance()->add(participant, p);
+    EntityManager::get_instance()->add(participant, p);
 
-		return p;
-	}
-	else {
-		return nullptr;
-	}
+    return p;
 };
 
 OpenDDSharp::DDS::DomainParticipant^ OpenDDSharp::DDS::DomainParticipantFactory::LookupParticipant(System::Int32 domainId) {
@@ -91,45 +88,61 @@ OpenDDSharp::DDS::DomainParticipant^ OpenDDSharp::DDS::DomainParticipantFactory:
 };
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DomainParticipantFactory::GetQos(OpenDDSharp::DDS::DomainParticipantFactoryQos^ qos) {
-	::DDS::DomainParticipantFactoryQos* nativeQos = new ::DDS::DomainParticipantFactoryQos();
-	::DDS::ReturnCode_t ret = impl_entity->get_qos(*nativeQos);
+    if (qos == nullptr) {
+        return OpenDDSharp::DDS::ReturnCode::BadParameter;
+    }
+
+	::DDS::DomainParticipantFactoryQos nativeQos;
+	::DDS::ReturnCode_t ret = impl_entity->get_qos(nativeQos);
 
 	if (ret == ::DDS::RETCODE_OK) {
-		qos->FromNative(*nativeQos);
+		qos->FromNative(nativeQos);
 	}
 
 	return (::OpenDDSharp::DDS::ReturnCode)ret;
 };
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DomainParticipantFactory::SetQos(OpenDDSharp::DDS::DomainParticipantFactoryQos^ qos) {
+    if (qos == nullptr) {
+        return OpenDDSharp::DDS::ReturnCode::BadParameter;
+    }
+
 	::DDS::DomainParticipantFactoryQos nativeQos = qos->ToNative();
 	return (::OpenDDSharp::DDS::ReturnCode)impl_entity->set_qos(nativeQos);
 };
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DomainParticipantFactory::GetDefaultDomainParticipantQos(OpenDDSharp::DDS::DomainParticipantQos^ qos) {
-	::DDS::DomainParticipantQos* nativeQos = new ::DDS::DomainParticipantQos();
-	::DDS::ReturnCode_t ret = impl_entity->get_default_participant_qos(*nativeQos);
+    if (qos == nullptr) {
+        return OpenDDSharp::DDS::ReturnCode::BadParameter;
+    }
 
-	if (ret == ::DDS::RETCODE_OK) {
-		qos->FromNative(*nativeQos);
-	}
+	::DDS::DomainParticipantQos nativeQos;
+	::DDS::ReturnCode_t ret = impl_entity->get_default_participant_qos(nativeQos);
+
+    // OpenDDS always return OK, not neeed to check it
+	qos->FromNative(nativeQos);	
 
 	return (::OpenDDSharp::DDS::ReturnCode)ret;
 };
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DomainParticipantFactory::SetDefaultDomainParticipantQos(OpenDDSharp::DDS::DomainParticipantQos^ qos) {
+    if (qos == nullptr) {
+        return OpenDDSharp::DDS::ReturnCode::BadParameter;
+    }
+
 	::DDS::DomainParticipantQos nativeQos = qos->ToNative();
 	return (::OpenDDSharp::DDS::ReturnCode)impl_entity->set_default_participant_qos(nativeQos);
 };
 
 OpenDDSharp::DDS::ReturnCode OpenDDSharp::DDS::DomainParticipantFactory::DeleteParticipant(OpenDDSharp::DDS::DomainParticipant^ participant) {
 	if (participant == nullptr) {
-		return OpenDDSharp::DDS::ReturnCode::BadParameter;
+		return OpenDDSharp::DDS::ReturnCode::Ok;
 	}
 	::DDS::ReturnCode_t ret = impl_entity->delete_participant(participant->impl_entity);
 	if (ret == ::DDS::RETCODE_OK) {
-		EntityManager::get_instance()->remove(participant->impl_entity);
+		EntityManager::get_instance()->remove(participant->impl_entity);   
+		participant->impl_entity = NULL;
 	}
-
+	
 	return (OpenDDSharp::DDS::ReturnCode)ret;	
 }

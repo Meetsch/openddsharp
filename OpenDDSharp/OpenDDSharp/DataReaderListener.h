@@ -5,16 +5,16 @@ OpenDDSharp is a .NET wrapper for OpenDDS
 Copyright (C) 2018 Jose Morato
 
 OpenDDSharp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 OpenDDSharp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Lesser General Public License
 along with OpenDDSharp. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 #pragma once
@@ -60,7 +60,19 @@ namespace OpenDDSharp {
 			typedef void(__stdcall *onSubscriptionReconnectedDeclaration)(::DDS::DataReader_ptr reader, const ::OpenDDS::DCPS::SubscriptionReconnectedStatus& status);
 			typedef void(__stdcall *onSubscriptionLostDeclaration)(::DDS::DataReader_ptr reader, const ::OpenDDS::DCPS::SubscriptionLostStatus& status);
 			typedef void(__stdcall *onBudgetExceededDeclaration)(::DDS::DataReader_ptr reader, const ::OpenDDS::DCPS::BudgetExceededStatus& status);
-			typedef void(__stdcall *onConnectionDeletedDeclaration)(::DDS::DataReader_ptr reader);
+
+            private:
+                System::Runtime::InteropServices::GCHandle gchDataAvailable;
+                System::Runtime::InteropServices::GCHandle gchRequestedDeadlineMissed;
+                System::Runtime::InteropServices::GCHandle gchRequestedIncompatibleQos;
+                System::Runtime::InteropServices::GCHandle gchSampleRejected;
+                System::Runtime::InteropServices::GCHandle gchLivelinessChanged;
+                System::Runtime::InteropServices::GCHandle gchSubscriptionMatched;
+                System::Runtime::InteropServices::GCHandle gchSampleLost;
+                System::Runtime::InteropServices::GCHandle gchSubscriptionDisconnected;
+                System::Runtime::InteropServices::GCHandle gchSubscriptionReconnected;
+                System::Runtime::InteropServices::GCHandle gchSubscriptionLost;
+                System::Runtime::InteropServices::GCHandle gchBudgetExceeded;
 
 			internal:
 				::OpenDDSharp::OpenDDS::DCPS::DataReaderListenerNative* impl_entity;
@@ -76,8 +88,7 @@ namespace OpenDDSharp {
 				onSubscriptionDisconnectedDeclaration onSubscriptionDisconnectedFunctionCpp;
 				onSubscriptionReconnectedDeclaration onSubscriptionReconnectedFunctionCpp;
 				onSubscriptionLostDeclaration onSubscriptionLostFunctionCpp;
-				onBudgetExceededDeclaration onBudgetExceededFunctionCpp;
-				onConnectionDeletedDeclaration onConnectionDeletedFunctionCpp;
+				onBudgetExceededDeclaration onBudgetExceededFunctionCpp;	
 
 			private:
 				delegate void onDataAvailableDelegate(::DDS::DataReader_ptr reader);
@@ -201,22 +212,14 @@ namespace OpenDDSharp {
 					OnBudgetExceeded(dataReader, OpenDDSharp::OpenDDS::DCPS::BudgetExceededStatus(status));
 				};
 
-				delegate void onConnectionDeletedDelegate(::DDS::DataReader_ptr reader);
-				void onConnectionDeleted(::DDS::DataReader_ptr reader) {
-					OpenDDSharp::DDS::Entity^ entity = EntityManager::get_instance()->find(reader);
-					OpenDDSharp::DDS::DataReader^ dataReader = nullptr;
-					if (entity != nullptr) {
-						dataReader = static_cast<OpenDDSharp::DDS::DataReader^>(entity);
-					}
-
-					OnConnectionDeleted(dataReader);
-				};
-
 			public:
 				/// <summary>
-				/// Creates a new instance of <see cref="DataReaderListener" />
+				/// Creates a new instance of <see cref="DataReaderListener" />.
 				/// </summary>
 				DataReaderListener();
+
+            protected:
+                !DataReaderListener();
 
 			public:
 				/// <summary>
@@ -311,14 +314,7 @@ namespace OpenDDSharp {
 				/// <param name="status">The current <see cref="OpenDDSharp::OpenDDS::DCPS::BudgetExceededStatus" /> status.</param>
 				virtual void OnBudgetExceeded(OpenDDSharp::DDS::DataReader^ reader, OpenDDSharp::OpenDDS::DCPS::BudgetExceededStatus status) = 0;
 
-				/// <summary>
-				/// Called when the connection object is cleaned up and the reconnect thread exits.
-				/// </summary>
-				/// <param name="reader">The <see cref="OpenDDSharp::DDS::DataReader" /> that triggered the event.</param>
-				virtual void OnConnectionDeleted(OpenDDSharp::DDS::DataReader^ reader) = 0;
-
 			};
-
 		};
 	};
 };
